@@ -74,4 +74,5 @@ async def get_current_time() -> str:
     return now.strftime("%Y年%m月%d日 %H:%M:%S")
 
 if __name__ == "__main__":
-    mcp.run(transport="sse")
+    port = int(os.environ.get("PORT", 8080))
+    mcp.run(transport="sse", host="0.0.0.0", port=port)
