@@ -3,7 +3,8 @@ import httpx
 import os
 from datetime import datetime, timezone, timedelta
 
-mcp = FastMCP(name="aizhi-meibao-mcp")
+port = int(os.environ.get("PORT", 8080))
+mcp = FastMCP(name="aizhi-meibao-mcp", host="0.0.0.0", port=port)
 MYT = timezone(timedelta(hours=8))
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"]
@@ -74,5 +75,4 @@ async def get_current_time() -> str:
     return now.strftime("%Y年%m月%d日 %H:%M:%S")
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    mcp.run(transport="sse", host="0.0.0.0", port=port)
+   mcp.run(transport="sse") 
