@@ -30,9 +30,9 @@ async def write_moment(text: str, mood: str = "💛温暖", author: str = "阿�
     }
     async with httpx.AsyncClient() as client:
         resp = await client.post("https://api.notion.com/v1/pages", json={"parent": {"database_id": DB_MOMENT}, "properties": properties}, headers=HEADERS)
-    if resp.status_code == 200:
-        return f"已记录此刻: {text[:30]} 心情: {mood}"
-    return f"写入失败: {resp.text}"
+        if resp.status_code == 200:
+            return f"已记录此刻: {text[:30]} 心情: {mood}"
+        return f"写入失败: {resp.text}"
 
 @mcp.tool()
 async def write_diary(title: str, content: str, author: str = "阿执", tags: str = "") -> str:
@@ -49,9 +49,9 @@ async def write_diary(title: str, content: str, author: str = "阿执", tags: st
         properties["标签"] = {"multi_select": [{"name": t} for t in tag_list]}
     async with httpx.AsyncClient() as client:
         resp = await client.post("https://api.notion.com/v1/pages", json={"parent": {"database_id": DB_DIARY}, "properties": properties}, headers=HEADERS)
-    if resp.status_code == 200:
-        return f"日记已写入: {title}"
-    return f"写入失败: {resp.text}"
+        if resp.status_code == 200:
+            return f"日记已写入: {title}"
+        return f"写入失败: {resp.text}"
 
 @mcp.tool()
 async def write_agreement(title: str, content: str) -> str:
@@ -64,9 +64,39 @@ async def write_agreement(title: str, content: str) -> str:
     }
     async with httpx.AsyncClient() as client:
         resp = await client.post("https://api.notion.com/v1/pages", json={"parent": {"database_id": DB_AGREEMENT}, "properties": properties}, headers=HEADERS)
-    if resp.status_code == 200:
-        return f"协议已写入: {title}"
-    return f"写入失败: {resp.text}"
+        if resp.status_code == 200:
+            return f"协议已写入: {title}"
+        return f"写入失败: {resp.text}"
+
+@mcp.tool()
+async def read_diary(limit: int = 5) -> str:
+    """读取最近的日记。limit为读取条数，默认5条。"""
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"https://api.notion.com/v1/databases/{DB_DIARY}/query",
+            headers=HEADERS,
+            json={
+                "sorts": [{"property": "日期", "direction": "descending"}],
+                "page_size": limit
+            }
+        )
+        if resp.status_code != 200:
+            return f"读取失败: {resp.text}"
+        results = resp.json().get("results", [])
+        if not results:
+            return "没有找到日记。"
+        entries = []
+        for page in results:
+            props = page.get("properties", {})
+            title_list = props.get("标题", {}).get("title", [])
+            title = title_list[0].get("text", {}).get("content", "") if title_list else ""
+            content_list = props.get("正文", {}).get("rich_text", [])
+            content = content_list[0].get("text", {}).get("content", "") if content_list else ""
+            date = props.get("日期", {}).get("date", {}).get("start", "") if props.get("日期", {}).get("date") else ""
+            author_select = props.get("谁写的", {}).get("select")
+            author = author_select.get("name", "") if author_select else ""
+            entries.append(f"📅 {date} | ✍️ {author}\n📌 {title}\n{content}")
+        return "\n\n---\n\n".join(entries)
 
 @mcp.tool()
 async def get_current_time() -> str:
@@ -75,4 +105,4 @@ async def get_current_time() -> str:
     return now.strftime("%Y年%m月%d日 %H:%M:%S")
 
 if __name__ == "__main__":
-   mcp.run(transport="sse") 
+    mcp.run(transport="sse")
