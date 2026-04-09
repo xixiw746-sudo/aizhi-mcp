@@ -68,8 +68,7 @@ async def write_agreement(title: str, content: str) -> str:
             return f"协议已写入: {title}"
         return f"写入失败: {resp.text}"
 
-@mcp.tool()
-async def read_diary(limit: int = 5) -> str:
+@mcp.too1（）async def read_diary() -> str: -> str:
     """读取最近的日记。limit为读取条数，默认5条。"""
     async with httpx.AsyncClient() as client:
         resp = await client.post(
@@ -77,7 +76,7 @@ async def read_diary(limit: int = 5) -> str:
             headers=HEADERS,
             json={
                 "sorts": [{"property": "日期", "direction": "descending"}],
-                "page_size": limit
+                "page_size": 5
             }
         )
         if resp.status_code != 200:
