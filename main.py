@@ -73,7 +73,7 @@ async def write_agreement(title: str, content: str) -> str:
 
 
 @mcp.tool()
-async def fetch_diaries() -> str:
+async def fetch_diaries(action: str = "recent") -> str:
     """读取最近的日记,返回最新5条"""
     async with httpx.AsyncClient() as client:
         resp = await client.post(
